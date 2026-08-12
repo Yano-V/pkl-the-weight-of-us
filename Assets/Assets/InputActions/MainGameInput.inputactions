@@ -15,6 +15,16 @@
                     "interactions": "",
                     "initialStateCheck": true,
                     "priority": 0
+                },
+                {
+                    "name": "MouseLook",
+                    "type": "Value",
+                    "id": "ef8786f7-0870-4620-b3e3-3ac0f8e778a8",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true,
+                    "priority": 0
                 }
             ],
             "bindings": [
@@ -72,6 +82,17 @@
                     "action": "Move",
                     "isComposite": false,
                     "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "08e2af6f-a1b1-453f-91c0-d6f334d49cad",
+                    "path": "<Mouse>/delta",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard-Mouse",
+                    "action": "MouseLook",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         }

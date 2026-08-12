@@ -101,6 +101,16 @@ public partial class @MainGameInput: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""initialStateCheck"": true,
                     ""priority"": 0
+                },
+                {
+                    ""name"": ""MouseLook"",
+                    ""type"": ""Value"",
+                    ""id"": ""ef8786f7-0870-4620-b3e3-3ac0f8e778a8"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
                 }
             ],
             ""bindings"": [
@@ -158,6 +168,17 @@ public partial class @MainGameInput: IInputActionCollection2, IDisposable
                     ""action"": ""Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""08e2af6f-a1b1-453f-91c0-d6f334d49cad"",
+                    ""path"": ""<Mouse>/delta"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard-Mouse"",
+                    ""action"": ""MouseLook"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -184,6 +205,7 @@ public partial class @MainGameInput: IInputActionCollection2, IDisposable
         // InGameFPS
         m_InGameFPS = asset.FindActionMap("InGameFPS", throwIfNotFound: true);
         m_InGameFPS_Move = m_InGameFPS.FindAction("Move", throwIfNotFound: true);
+        m_InGameFPS_MouseLook = m_InGameFPS.FindAction("MouseLook", throwIfNotFound: true);
     }
 
     ~@MainGameInput()
@@ -265,6 +287,7 @@ public partial class @MainGameInput: IInputActionCollection2, IDisposable
     private readonly InputActionMap m_InGameFPS;
     private List<IInGameFPSActions> m_InGameFPSActionsCallbackInterfaces = new List<IInGameFPSActions>();
     private readonly InputAction m_InGameFPS_Move;
+    private readonly InputAction m_InGameFPS_MouseLook;
     /// <summary>
     /// Provides access to input actions defined in input action map "InGameFPS".
     /// </summary>
@@ -280,6 +303,10 @@ public partial class @MainGameInput: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "InGameFPS/Move".
         /// </summary>
         public InputAction @Move => m_Wrapper.m_InGameFPS_Move;
+        /// <summary>
+        /// Provides access to the underlying input action "InGameFPS/MouseLook".
+        /// </summary>
+        public InputAction @MouseLook => m_Wrapper.m_InGameFPS_MouseLook;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -309,6 +336,9 @@ public partial class @MainGameInput: IInputActionCollection2, IDisposable
             @Move.started += instance.OnMove;
             @Move.performed += instance.OnMove;
             @Move.canceled += instance.OnMove;
+            @MouseLook.started += instance.OnMouseLook;
+            @MouseLook.performed += instance.OnMouseLook;
+            @MouseLook.canceled += instance.OnMouseLook;
         }
 
         /// <summary>
@@ -323,6 +353,9 @@ public partial class @MainGameInput: IInputActionCollection2, IDisposable
             @Move.started -= instance.OnMove;
             @Move.performed -= instance.OnMove;
             @Move.canceled -= instance.OnMove;
+            @MouseLook.started -= instance.OnMouseLook;
+            @MouseLook.performed -= instance.OnMouseLook;
+            @MouseLook.canceled -= instance.OnMouseLook;
         }
 
         /// <summary>
@@ -383,5 +416,12 @@ public partial class @MainGameInput: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnMove(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "MouseLook" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnMouseLook(InputAction.CallbackContext context);
     }
 }

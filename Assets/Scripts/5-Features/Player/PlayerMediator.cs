@@ -7,6 +7,8 @@ public class PlayerMediator : MonoBehaviour
 {
     private IInputService iIS;
 
+    [SerializeField] PlayerCamHandler playerCamHandler;
+
     [SerializeField] Vector2 currentInput;
 
     #region Dependency Injection
@@ -34,12 +36,18 @@ public class PlayerMediator : MonoBehaviour
     {
         iIS.Input.InGameFPS.Move.performed += HandleMoveInput;
         iIS.Input.InGameFPS.Move.canceled += HandleMoveInput;
+
+        iIS.Input.InGameFPS.MouseLook.performed += HandleMouseLookInput;
+        iIS.Input.InGameFPS.MouseLook.canceled += HandleMouseLookInput;
     }
 
     void UnsubInputEvents()
     {
         iIS.Input.InGameFPS.Move.performed -= HandleMoveInput;
         iIS.Input.InGameFPS.Move.canceled -= HandleMoveInput;
+
+        iIS.Input.InGameFPS.MouseLook.performed -= HandleMouseLookInput;
+        iIS.Input.InGameFPS.MouseLook.canceled -= HandleMouseLookInput;
     }
 
     #endregion
@@ -48,6 +56,11 @@ public class PlayerMediator : MonoBehaviour
     void HandleMoveInput(InputAction.CallbackContext context)
     {
         currentInput = context.ReadValue<Vector2>();
+    }
+
+    void HandleMouseLookInput(InputAction.CallbackContext context)
+    {
+        playerCamHandler.MoveCamRaw(context.ReadValue<Vector2>());
     }
     #endregion
 }
