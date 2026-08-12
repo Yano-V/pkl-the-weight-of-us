@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &8081391049220659981
+--- !u!1 &5360111986463740609
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,22 +8,22 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 119868236038689500}
-  - component: {fileID: -4086951545855143559}
+  - component: {fileID: 1352934777693290805}
+  - component: {fileID: -6129233699434488027}
   m_Layer: 0
-  m_Name: RootLifetimeScope
+  m_Name: CameraService
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &119868236038689500
+--- !u!4 &1352934777693290805
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8081391049220659981}
+  m_GameObject: {fileID: 5360111986463740609}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -32,21 +32,15 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &-4086951545855143559
+--- !u!114 &-6129233699434488027
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8081391049220659981}
+  m_GameObject: {fileID: 5360111986463740609}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e7a1d66ecae71e64bb3158e381c50f5c, type: 3}
+  m_Script: {fileID: 11500000, guid: 578530c54c34c674ca9fb8bbaf0628f1, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RootLifetimeScope
-  parentReference:
-    TypeName: 
-  autoRun: 1
-  autoInjectGameObjects:
-  - {fileID: 0}
-  inputService: {fileID: 5879631220876588438, guid: ca74b954329242542acce0bfd87aeea3, type: 3}
+  m_EditorClassIdentifier: Assembly-CSharp::CameraService
