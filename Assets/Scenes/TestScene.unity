@@ -305,6 +305,7 @@ GameObject:
   m_Component:
   - component: {fileID: 937010679}
   - component: {fileID: 937010680}
+  - component: {fileID: 937010682}
   - component: {fileID: 937010681}
   m_Layer: 0
   m_Name: Player
@@ -342,7 +343,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMediator
   playerCamHandler: {fileID: 1864928512}
-  currentInput: {x: 0, y: 0}
+  playerMovementHandler: {fileID: 937010682}
+  moveInput: {x: 0, y: 0}
 --- !u!114 &937010681
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -360,6 +362,19 @@ MonoBehaviour:
   autoRun: 1
   autoInjectGameObjects:
   - {fileID: 937010678}
+--- !u!114 &937010682
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 937010678}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1fdcf145e2e1efd4ba950af917c73aa2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMovementHandler
+  moveSpeed: 5
 --- !u!1 &1323879620
 GameObject:
   m_ObjectHideFlags: 0

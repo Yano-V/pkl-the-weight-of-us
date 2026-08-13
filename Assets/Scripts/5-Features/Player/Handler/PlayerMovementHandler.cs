@@ -26,7 +26,7 @@ public class PlayerMovementHandler : MonoBehaviour
     {
         if (iCS == null || 
             iCS.CurrentActiveCam == null ||
-            value.magnitude > 0.1f) return;
+            value.magnitude < 0.1f) return;
 
         Vector2 input = Vector2.ClampMagnitude(value, 1f);
         Quaternion yawRotation = Quaternion.Euler(0, iCS.CurrentActiveCam.CamRotationEulerAngles.y, 0);

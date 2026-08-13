@@ -21,6 +21,8 @@ public class CameraServiceEditor : Editor
         DrawDefaultInspector();
         EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
         DrawDictionaryDisplay();
+        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+        DrawCurrentActiveCam();
     }
 
     void DrawDictionaryDisplay()
@@ -33,5 +35,10 @@ public class CameraServiceEditor : Editor
                 EditorGUILayout.LabelField($"ID: {value.Key} | Type: {value.Value.GetType().Name}, GameObject: {value.Value.gameObject.name}");
             }
         }
+    }
+
+    void DrawCurrentActiveCam()
+    {
+        EditorGUILayout.LabelField($"Current Active Camera: {cameraService.CurrentActiveCam.CamID} ({cameraService.CurrentActiveCam.gameObject.name})");
     }
 }
