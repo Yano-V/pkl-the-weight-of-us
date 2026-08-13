@@ -26,9 +26,9 @@ public class PlayerMediator : MonoBehaviour
     [SerializeField] Vector2 moveInput; 
 
     [Inject]
-    public void Construct(IInputService newInputService)
+    public void Construct(IInputService iIS)
     {
-        iIS = newInputService;
+        this.iIS = iIS;
     }
 
     void OnEnable()
@@ -51,7 +51,17 @@ public class PlayerMediator : MonoBehaviour
 
     void Update()
     {
-        playerMovementHandler.MovePlayer(moveInput);
+        bool isRunning = false;
+
+        if (Keyboard.current != null)
+        {
+            if (Keyboard.current.leftShiftKey.isPressed)
+            {
+                isRunning = true;
+            }
+        }
+
+        playerMovementHandler.MovePlayer(moveInput, isRunning);
     }
 
     void HandleMoveInput(InputAction.CallbackContext context)
