@@ -10,6 +10,8 @@ public class CameraService : MonoBehaviour, ICameraService
 
     #region Interface Implementation Properties
     public IReadOnlyDictionary<string, ICineCam> RegisteredCams => registeredCams;
+
+    public ICineCam CurrentActiveCam => activeCamera;
     #endregion
 
     #region Interface Implementation Methods

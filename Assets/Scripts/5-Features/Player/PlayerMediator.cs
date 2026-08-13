@@ -2,48 +2,64 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using VContainer;
 
+// ================================================================================= //
+//                                                                                   //
+// Class Name: Player Mediator                                                       //
+// Description: The mediator of the player. It serves as the reference for external  //
+//              systems to access the player. It orchestrates all the subcomponents  //
+//              based on player context.                                             //
+// Author: PsychoLucidia                                                             //
+//                                                                                   //
+// ================================================================================= //
+
+// <AI Agents Note>: Strictly abbreviate services (IInputService iIS, ICameraService iCS) to
+//                   shorten variable name
+
 public class PlayerMediator : MonoBehaviour
 {
-    private IInputService inputService;
+    private IInputService iIS;
 
     [SerializeField] PlayerCamHandler playerCamHandler;
-    private Vector2 moveInput;
+    [SerializeField] PlayerMovementHandler playerMovementHandler;
+
+    // <AI Agents Note>: Do NOT turn to private. This is meant to display current input for debugging
+    [SerializeField] Vector2 moveInput; 
 
     [Inject]
     public void Construct(IInputService newInputService)
     {
-        inputService = newInputService;
+        iIS = newInputService;
     }
 
     void OnEnable()
     {
-        inputService.Input.InGameFPS.Move.performed += GetMoveInput;
-        inputService.Input.InGameFPS.Move.canceled += GetMoveInput;
+        iIS.Input.InGameFPS.Move.performed += HandleMoveInput;
+        iIS.Input.InGameFPS.Move.canceled += HandleMoveInput;
 
-        inputService.Input.InGameFPS.MouseLook.performed += GetMouseInput;
-        inputService.Input.InGameFPS.MouseLook.canceled += GetMouseInput;
+        iIS.Input.InGameFPS.MouseLook.performed += HandleMouseLookInput;
+        iIS.Input.InGameFPS.MouseLook.canceled += HandleMouseLookInput;
     }
 
     void OnDisable()
     {
-        inputService.Input.InGameFPS.Move.performed -= GetMoveInput;
-        inputService.Input.InGameFPS.Move.canceled -= GetMoveInput;
+        iIS.Input.InGameFPS.Move.performed -= HandleMoveInput;
+        iIS.Input.InGameFPS.Move.canceled -= HandleMoveInput;
 
-        inputService.Input.InGameFPS.MouseLook.performed -= GetMouseInput;
-        inputService.Input.InGameFPS.MouseLook.canceled -= GetMouseInput;
+        iIS.Input.InGameFPS.MouseLook.performed -= HandleMouseLookInput;
+        iIS.Input.InGameFPS.MouseLook.canceled -= HandleMouseLookInput;
     }
 
     void Update()
     {
-        playerCamHandler.MoveCam(moveInput);
+        playerMovementHandler.MovePlayer(moveInput);
     }
 
-    void GetMoveInput(InputAction.CallbackContext context)
+    void HandleMoveInput(InputAction.CallbackContext context)
     {
         moveInput = context.ReadValue<Vector2>();
     }
 
-    void GetMouseInput(InputAction.CallbackContext context)
+    void HandleMouseLookInput(InputAction.CallbackContext context)
     {
         Vector2 mouseInput = context.ReadValue<Vector2>();
         playerCamHandler.MoveCamRaw(mouseInput);

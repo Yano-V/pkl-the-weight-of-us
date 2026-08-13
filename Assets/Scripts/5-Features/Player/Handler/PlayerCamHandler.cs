@@ -18,22 +18,26 @@ public class PlayerCamHandler : MonoBehaviour, ICineCam
     [SerializeField] float lookY; // Refers to Transform's X
 
     [SerializeField] float sensitivity = 1;
-    [SerializeField, Min(0)] float moveSpeed = 5;
+
+    #region Interface Implementation Methods
+    public Quaternion CamRotation => Quaternion.Euler(new(LookX, LookY, transform.rotation.eulerAngles.z));
+    public Vector3 CamRotationEulerAngles => new(LookX, LookY, transform.rotation.eulerAngles.z);
 
     public string CamID => $"{iDPrefix}{gameObject.name}{iDSuffix}";
     public bool IsSceneDefaultCamera => isSceneDefaultCamera;
+    #endregion
 
     #region Private Properties
-    private float LookX
+    public float LookX
     {
         get => lookX;
-        set => lookX = Mathf.Clamp(value, -90, 90);
+        private set => lookX = Mathf.Clamp(value, -90, 90);
     }
 
-    private float LookY
+    public float LookY
     {
         get => lookY;
-        set => lookY = MathUtils.WrapAngle180(value);
+        private set => lookY = MathUtils.WrapAngle180(value);
     }
     #endregion
 
@@ -67,15 +71,6 @@ public class PlayerCamHandler : MonoBehaviour, ICineCam
     {
         LookY += value.x * sensitivity;
         LookX -= value.y * sensitivity;
-    }
-
-    public void MoveCam(Vector2 value)
-    {
-        Vector2 input = Vector2.ClampMagnitude(value, 1f);
-        Quaternion yawRotation = Quaternion.Euler(0, LookY, 0);
-        Vector3 direction = yawRotation * new Vector3(input.x, 0, input.y);
-
-        transform.position += direction * moveSpeed * Time.deltaTime;
     }
 
     #region Unity Editor Methods
