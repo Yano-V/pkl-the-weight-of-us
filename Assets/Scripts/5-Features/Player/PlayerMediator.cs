@@ -1,66 +1,51 @@
-using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using VContainer;
 
 public class PlayerMediator : MonoBehaviour
 {
-    private IInputService iIS;
+    private IInputService inputService;
 
     [SerializeField] PlayerCamHandler playerCamHandler;
+    private Vector2 moveInput;
 
-    [SerializeField] Vector2 currentInput;
-
-    #region Dependency Injection
     [Inject]
-    public void Construct(IInputService inputService)
+    public void Construct(IInputService newInputService)
     {
-        iIS = inputService;
+        inputService = newInputService;
     }
-    #endregion
 
-    #region Unity Methods
     void OnEnable()
     {
-        SubInputEvents();
+        inputService.Input.InGameFPS.Move.performed += GetMoveInput;
+        inputService.Input.InGameFPS.Move.canceled += GetMoveInput;
+
+        inputService.Input.InGameFPS.MouseLook.performed += GetMouseInput;
+        inputService.Input.InGameFPS.MouseLook.canceled += GetMouseInput;
     }
 
     void OnDisable()
     {
-        UnsubInputEvents();        
-    }
-    #endregion
+        inputService.Input.InGameFPS.Move.performed -= GetMoveInput;
+        inputService.Input.InGameFPS.Move.canceled -= GetMoveInput;
 
-    #region Event Subscriptions
-    void SubInputEvents()
+        inputService.Input.InGameFPS.MouseLook.performed -= GetMouseInput;
+        inputService.Input.InGameFPS.MouseLook.canceled -= GetMouseInput;
+    }
+
+    void Update()
     {
-        iIS.Input.InGameFPS.Move.performed += HandleMoveInput;
-        iIS.Input.InGameFPS.Move.canceled += HandleMoveInput;
-
-        iIS.Input.InGameFPS.MouseLook.performed += HandleMouseLookInput;
-        iIS.Input.InGameFPS.MouseLook.canceled += HandleMouseLookInput;
+        playerCamHandler.MoveCam(moveInput);
     }
 
-    void UnsubInputEvents()
+    void GetMoveInput(InputAction.CallbackContext context)
     {
-        iIS.Input.InGameFPS.Move.performed -= HandleMoveInput;
-        iIS.Input.InGameFPS.Move.canceled -= HandleMoveInput;
-
-        iIS.Input.InGameFPS.MouseLook.performed -= HandleMouseLookInput;
-        iIS.Input.InGameFPS.MouseLook.canceled -= HandleMouseLookInput;
+        moveInput = context.ReadValue<Vector2>();
     }
 
-    #endregion
-
-    #region Input Event Callbacks
-    void HandleMoveInput(InputAction.CallbackContext context)
+    void GetMouseInput(InputAction.CallbackContext context)
     {
-        currentInput = context.ReadValue<Vector2>();
+        Vector2 mouseInput = context.ReadValue<Vector2>();
+        playerCamHandler.MoveCamRaw(mouseInput);
     }
-
-    void HandleMouseLookInput(InputAction.CallbackContext context)
-    {
-        playerCamHandler.MoveCamRaw(context.ReadValue<Vector2>());
-    }
-    #endregion
 }
