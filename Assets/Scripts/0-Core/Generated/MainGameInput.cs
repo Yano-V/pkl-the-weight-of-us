@@ -111,6 +111,16 @@ public partial class @MainGameInput: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""initialStateCheck"": true,
                     ""priority"": 0
+                },
+                {
+                    ""name"": ""Sprint"",
+                    ""type"": ""Value"",
+                    ""id"": ""6bb71bea-3639-4f42-a588-1ac105713a19"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
                 }
             ],
             ""bindings"": [
@@ -179,6 +189,17 @@ public partial class @MainGameInput: IInputActionCollection2, IDisposable
                     ""action"": ""MouseLook"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""0cf26591-1641-4e04-880f-446a88a8c7f1"",
+                    ""path"": ""<Keyboard>/leftShift"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Sprint"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -206,6 +227,7 @@ public partial class @MainGameInput: IInputActionCollection2, IDisposable
         m_InGameFPS = asset.FindActionMap("InGameFPS", throwIfNotFound: true);
         m_InGameFPS_Move = m_InGameFPS.FindAction("Move", throwIfNotFound: true);
         m_InGameFPS_MouseLook = m_InGameFPS.FindAction("MouseLook", throwIfNotFound: true);
+        m_InGameFPS_Sprint = m_InGameFPS.FindAction("Sprint", throwIfNotFound: true);
     }
 
     ~@MainGameInput()
@@ -288,6 +310,7 @@ public partial class @MainGameInput: IInputActionCollection2, IDisposable
     private List<IInGameFPSActions> m_InGameFPSActionsCallbackInterfaces = new List<IInGameFPSActions>();
     private readonly InputAction m_InGameFPS_Move;
     private readonly InputAction m_InGameFPS_MouseLook;
+    private readonly InputAction m_InGameFPS_Sprint;
     /// <summary>
     /// Provides access to input actions defined in input action map "InGameFPS".
     /// </summary>
@@ -307,6 +330,10 @@ public partial class @MainGameInput: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "InGameFPS/MouseLook".
         /// </summary>
         public InputAction @MouseLook => m_Wrapper.m_InGameFPS_MouseLook;
+        /// <summary>
+        /// Provides access to the underlying input action "InGameFPS/Sprint".
+        /// </summary>
+        public InputAction @Sprint => m_Wrapper.m_InGameFPS_Sprint;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -339,6 +366,9 @@ public partial class @MainGameInput: IInputActionCollection2, IDisposable
             @MouseLook.started += instance.OnMouseLook;
             @MouseLook.performed += instance.OnMouseLook;
             @MouseLook.canceled += instance.OnMouseLook;
+            @Sprint.started += instance.OnSprint;
+            @Sprint.performed += instance.OnSprint;
+            @Sprint.canceled += instance.OnSprint;
         }
 
         /// <summary>
@@ -356,6 +386,9 @@ public partial class @MainGameInput: IInputActionCollection2, IDisposable
             @MouseLook.started -= instance.OnMouseLook;
             @MouseLook.performed -= instance.OnMouseLook;
             @MouseLook.canceled -= instance.OnMouseLook;
+            @Sprint.started -= instance.OnSprint;
+            @Sprint.performed -= instance.OnSprint;
+            @Sprint.canceled -= instance.OnSprint;
         }
 
         /// <summary>
@@ -423,5 +456,12 @@ public partial class @MainGameInput: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnMouseLook(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Sprint" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSprint(InputAction.CallbackContext context);
     }
 }

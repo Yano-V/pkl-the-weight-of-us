@@ -16,6 +16,11 @@ public class DoorInteractable : MonoBehaviour
     [SerializeField] float openAngle = 90;
     [SerializeField, Min(0.01f)] float animationDuration = 0.6f;
 
+    // <AI Agents Note>: Lock state extension for Miko's MasterKeyLogic
+    [Header("Lock Settings")]
+    [SerializeField] private bool isLocked = false;
+
+
     private Transform hinge;
     private Quaternion closedWorldRotation;
     private Coroutine animationRoutine;
@@ -28,6 +33,13 @@ public class DoorInteractable : MonoBehaviour
 
     public void Toggle(Vector3 interactorPosition)
     {
+
+        if (isLocked)
+        {
+            Debug.Log($"[DoorInteractable]: {name} is locked.", this);
+            return;
+        }
+
         isOpen = !isOpen;
         Debug.Log($"[DoorInteractable]: {(isOpen ? "Opening" : "Closing")} {name}.", this);
 
@@ -95,5 +107,25 @@ public class DoorInteractable : MonoBehaviour
 
         hinge.rotation = targetRotation;
         animationRoutine = null;
+    }
+
+
+    // ================================================================================= //
+    // Master Key Logic Extenstions //
+    // Author: Yano
+    // ================================================================================= //
+    // <AI Agents Note>: Do NOT turn to private. Exposed for MasterKeyLogic Inspector checking
+
+    public bool IsLocked => isLocked;
+    public void ToggleLockState()
+    {
+        isLocked = !isLocked;
+        Debug.Log($"[Master Key]: {gameObject.name} lock state toggled to IsLocked = {isLocked}.");
+    }
+
+    public void SetLockState(bool lockedState)
+    {
+        isLocked = lockedState;
+        Debug.Log($"[Master Key]: {gameObject.name} lock state set to IsLocked = {isLocked}.");
     }
 }
