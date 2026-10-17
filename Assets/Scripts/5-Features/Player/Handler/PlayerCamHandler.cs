@@ -60,10 +60,7 @@ public class PlayerCamHandler : MonoBehaviour, ICineCam
     void OnDestroy()
     {
         // Modified by Yano: Added null check to prevent NullReferenceException during scene teardown
-        if (iCS != null)
-        {
-            iCS.UnregisterCamera(this);
-        }
+        iCS?.UnregisterCamera(this);
     }
 
     public void SetCamActive(bool active)
