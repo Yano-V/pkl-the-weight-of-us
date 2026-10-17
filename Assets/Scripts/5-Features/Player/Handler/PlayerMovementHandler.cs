@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.InputSystem; // Added for Input System integration
-using VContainer;
 
 // ================================================================================= //
 //                                                                                   //
@@ -35,6 +34,7 @@ public class PlayerMovementHandler : MonoBehaviour
 
     void Awake()
     {
+        iCS = GameServices.Get<ICameraService>();
         characterController = GetComponent<CharacterController>();
 
         // Existing scene instances predate the RequireComponent attribute, so make
@@ -51,12 +51,6 @@ public class PlayerMovementHandler : MonoBehaviour
         characterController.slopeLimit = slopeLimit;
         characterController.skinWidth = 0.05f;
         characterController.minMoveDistance = 0;
-    }
-
-    [Inject]
-    public void Construct(ICameraService iCS)
-    {
-        this.iCS = iCS;
     }
 
     // Call  method from Input System (OnMove and OnSprint events)
@@ -88,7 +82,7 @@ public class PlayerMovementHandler : MonoBehaviour
         {
             Vector2 input = Vector2.ClampMagnitude(value, 1f);
 
-            // Fallback to Main Camera if VContainer service isn't loaded in the test scene
+            // Fallback to Main Camera if the camera service has no active camera.
             float camYaw = (iCS != null && iCS.CurrentActiveCam != null)
                 ? iCS.CurrentActiveCam.CamRotationEulerAngles.y
                 : Camera.main.transform.eulerAngles.y;

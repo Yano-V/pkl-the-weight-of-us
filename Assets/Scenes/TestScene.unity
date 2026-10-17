@@ -307,6 +307,7 @@ GameObject:
   - component: {fileID: 937010680}
   - component: {fileID: 937010682}
   - component: {fileID: 937010681}
+  - component: {fileID: 937010683}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -344,6 +345,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMediator
   playerCamHandler: {fileID: 1864928512}
   playerMovementHandler: {fileID: 937010682}
+  interactionDistance: 5
   moveInput: {x: 0, y: 0}
 --- !u!114 &937010681
 MonoBehaviour:
@@ -362,6 +364,8 @@ MonoBehaviour:
   autoRun: 1
   autoInjectGameObjects:
   - {fileID: 937010678}
+  scopeName: 
+  <Parent>k__BackingField: {fileID: 0}
 --- !u!114 &937010682
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -375,6 +379,37 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovementHandler
   moveSpeed: 5
+  runSpeed: 10
+  gravity: 20
+  controllerHeight: 1.8
+  controllerRadius: 0.3
+  stairStepHeight: 0.45
+  slopeLimit: 50
+--- !u!143 &937010683
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 937010678}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Height: 2
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &1323879620
 GameObject:
   m_ObjectHideFlags: 0

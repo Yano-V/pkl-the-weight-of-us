@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using VContainer;
 
 // ================================================================================= //
 //                                                                                   //
@@ -28,10 +27,9 @@ public class PlayerMediator : MonoBehaviour
     // <AI Agents Note>: Do NOT turn to private. This is meant to display current input for debugging
     [SerializeField] Vector2 moveInput; 
 
-    [Inject]
-    public void Construct(IInputService iIS)
+    void Awake()
     {
-        this.iIS = iIS;
+        iIS = GameServices.Get<IInputService>();
     }
 
     void OnEnable()

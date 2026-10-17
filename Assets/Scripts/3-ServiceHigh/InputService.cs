@@ -1,9 +1,8 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using VContainer;
 
-public class InputService : MonoBehaviour, IInputService
+public class InputService : MonoService, IInputService
 {
     private MainGameInput input;
 
@@ -33,15 +32,29 @@ public class InputService : MonoBehaviour, IInputService
     public event Action<InputActionMap> OnActiveMapChanged;
     #endregion
 
-    #region Dependency Injection
-    [Inject]
-    public void Construct(MainGameInput pInput)
+    void Awake()
     {
-        input = pInput;
+        if (GameServices.IsServiceRegistered<IInputService>())
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        GameServices.Register<IInputService>(this);
+        serviceRegistered = true;
+
+        input = new MainGameInput();
         ChangeActionMap(initialActionMapName);
-        LogUtilities.Log("MainGameInput injected.", GetType().Name);
     }
-    #endregion
+
+    void OnDestroy()
+    {
+        if (serviceRegistered)
+        {
+            GameServices.Unregister<IInputService>();
+            serviceRegistered = false;
+        }
+    }
 
     #region Interface Implementation Methods
     public void ChangeActionMap(string mapName)

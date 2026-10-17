@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraService : MonoBehaviour, ICameraService
+public class CameraService : MonoService, ICameraService
 {
     private readonly Dictionary<string, ICineCam> registeredCams = new();
 
@@ -13,6 +13,27 @@ public class CameraService : MonoBehaviour, ICameraService
 
     public ICineCam CurrentActiveCam => activeCamera;
     #endregion
+
+    void Awake()
+    {
+        if (GameServices.IsServiceRegistered<ICameraService>())
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        GameServices.Register<ICameraService>(this);
+        serviceRegistered = true;
+    }
+
+    void OnDestroy()
+    {
+        if (serviceRegistered)
+        {
+            GameServices.Unregister<ICameraService>();
+            serviceRegistered = false;
+        }
+    }
 
     #region Interface Implementation Methods
     public void RegisterCamera(ICineCam cam)

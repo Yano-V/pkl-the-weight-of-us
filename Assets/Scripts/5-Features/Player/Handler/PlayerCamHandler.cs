@@ -1,7 +1,6 @@
 using ProjLimbo;
 using Unity.Cinemachine;
 using UnityEngine;
-using VContainer;
 
 [RequireComponent(typeof(CinemachineCamera))]
 public class PlayerCamHandler : MonoBehaviour, ICineCam
@@ -42,10 +41,9 @@ public class PlayerCamHandler : MonoBehaviour, ICineCam
     #endregion
 
 
-    [Inject]
-    public void Construct(ICameraService cameraService)
+    void Awake()
     {
-        iCS = cameraService;
+        iCS = GameServices.Get<ICameraService>();
 
         LogUtilities.Assert(iCS != null, "Camera Service is null.", GetType().Name, gameObject);
 
