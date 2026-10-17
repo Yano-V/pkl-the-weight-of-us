@@ -34,6 +34,7 @@ public class PlayerMovementHandler : MonoBehaviour
 
     void Awake()
     {
+        iCS = GameServices.Get<ICameraService>();
         characterController = GetComponent<CharacterController>();
 
         // Existing scene instances predate the RequireComponent attribute, so make
@@ -50,7 +51,6 @@ public class PlayerMovementHandler : MonoBehaviour
         characterController.slopeLimit = slopeLimit;
         characterController.skinWidth = 0.05f;
         characterController.minMoveDistance = 0;
-        iCS = GameServices.Get<ICameraService>();
     }
 
     // Call  method from Input System (OnMove and OnSprint events)
