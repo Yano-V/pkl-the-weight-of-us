@@ -39,6 +39,7 @@ public class CameraServiceEditor : Editor
 
     void DrawCurrentActiveCam()
     {
-        EditorGUILayout.LabelField($"Current Active Camera: {cameraService.CurrentActiveCam.CamID} ({cameraService.CurrentActiveCam.gameObject.name})");
+        if (cameraService.CurrentActiveCam != null)
+            EditorGUILayout.LabelField($"Current Active Camera: {cameraService.CurrentActiveCam.CamID} ({cameraService.CurrentActiveCam.gameObject.name})");
     }
 }

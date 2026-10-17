@@ -9,9 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1352934777693290805}
-  - component: {fileID: -6129233699434488027}
+  - component: {fileID: 5879631220876588438}
   m_Layer: 0
-  m_Name: CameraService
+  m_Name: _InputService
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -32,7 +32,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &-6129233699434488027
+--- !u!114 &5879631220876588438
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -41,6 +41,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5360111986463740609}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 578530c54c34c674ca9fb8bbaf0628f1, type: 3}
+  m_Script: {fileID: 11500000, guid: bb7492ffd4a6f72459fd50d5b7f107f8, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CameraService
+  m_EditorClassIdentifier: Assembly-CSharp::InputService
+  initialActionMapName: InGameFPS

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface ICameraService
+public interface ICameraService : IBaseService
 {
     IReadOnlyDictionary<string, ICineCam> RegisteredCams { get; }
 

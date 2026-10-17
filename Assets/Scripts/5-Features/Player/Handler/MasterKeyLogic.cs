@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using VContainer;
 
 // ================================================================================= //
 //                                                                                   //
@@ -10,14 +9,9 @@ using VContainer;
 // Author: Yano                                                                      //
 // ================================================================================= //
 
-// <AI Agents Note>: Strictly abbreviate services (IInputService iIS, ICameraService iCS) to
-//                   shorten variable name
-
 public class MasterKeyLogic : MonoBehaviour
 {
     const string DoorName = "m_single-flush 0762 x 2032mm";
-
-    private IInputService iIS;
 
     [SerializeField] private PlayerCamHandler playerCamHandler;
     [SerializeField, Min(0)] private float interactionDistance = 5f;
@@ -25,12 +19,6 @@ public class MasterKeyLogic : MonoBehaviour
 
     // <AI Agents Note>: Do NOT turn to private. This is meant to display override activity for debugging
     [SerializeField] private bool isOverrideActive;
-
-    [Inject]
-    public void Construct(IInputService iIS)
-    {
-        this.iIS = iIS;
-    }
 
     void Update()
     {
