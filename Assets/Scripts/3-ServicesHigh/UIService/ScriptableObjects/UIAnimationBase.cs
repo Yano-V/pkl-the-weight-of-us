@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public abstract class UIAnimationBase : ScriptableObject
 {
@@ -25,7 +26,8 @@ public abstract class UIAnimationBase : ScriptableObject
     [SerializeField] protected bool checkAnimatorGroupID = false;
     [SerializeField] protected bool checkAnimatorID = false;
     [SerializeField] protected bool checkAnimationGroupID = false;
-    [SerializeField] protected bool sendCloseAnimationDoneFlag = false;
+    [SerializeField, FormerlySerializedAs("sendCloseAnimationDoneFlag")]
+    protected bool signalsSceneTransitionCloseAnimationDone = false;
     [SerializeField] protected bool excludeOpenAnimationFromCount = false;
     [SerializeField] protected bool excludeCloseAnimationFromCount = false;
 
@@ -149,7 +151,7 @@ public abstract class UIAnimationBase : ScriptableObject
                                      animatorID,
                                      animationID,
                                      animationGroupID,
-                                     sendCloseAnimationDoneFlag,
+                                     signalsSceneTransitionCloseAnimationDone,
                                      uIAnimDoneType);
 
         uIPageHandler.SendDonePlayingEvent(data);

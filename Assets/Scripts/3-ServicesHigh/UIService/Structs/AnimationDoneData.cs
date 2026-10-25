@@ -5,7 +5,7 @@ public readonly struct AnimationDoneData
     public string AnimationGroupID { get; }
     public string AnimationID { get; }
 
-    public bool SendCloseAnimationDoneFlag { get; }
+    public bool SignalsSceneTransitionCloseAnimationDone { get; }
 
     public UIAnimType UIAnimType { get; }
 
@@ -13,14 +13,14 @@ public readonly struct AnimationDoneData
                              string animatorID,
                              string animationID,
                              string animationGroupID,
-                             bool sendCloseAnimationDoneFlag,
+                             bool signalsSceneTransitionCloseAnimationDone,
                              UIAnimType uIAnimType)
     {
         AnimatorGroupID = animatorGroupID;
         AnimatorID = animatorID;
         AnimationGroupID = animationGroupID;
         AnimationID = animationID;
-        SendCloseAnimationDoneFlag = sendCloseAnimationDoneFlag;
+        SignalsSceneTransitionCloseAnimationDone = signalsSceneTransitionCloseAnimationDone;
         UIAnimType = uIAnimType;
     }
 }

@@ -91,7 +91,7 @@ All scene lifecycle events carry the relevant `SceneData` instance. `OnUpdateLoa
 6. **Close loading UI:** Set the loading-page waiter to expect `Close`, emit `OnFrameTimeStabilized`, then wait for `closeAnimationDoneFlag` to become true.
 7. **Complete scene:** Promote `loadingSceneData` to `currentSceneData`, clear the loading reference, change game load state to `Done`, emit `OnSceneCompleteLoad`, and wait for `LoadingPageDone(Close)`. Finally emit `OnSceneCompleteLoadPageDone` and clear `loadCoroutine`.
 
-The two UI completion signals are separate: `LoadingPageDone` satisfies the direction-specific yield instruction, while `SetCloseAnimationDoneFlag(true)` satisfies the boolean gate. The current UI integration calls `LoadingPageDone` when a loading page's animation finishes. A close animation must also have `sendCloseAnimationDoneFlag` enabled so `UIPageHandler` sends the separate close flag. A transition can otherwise remain waiting indefinitely at either gate.
+The two UI completion signals are separate: `LoadingPageDone` satisfies the direction-specific yield instruction, while `SetCloseAnimationDoneFlag(true)` satisfies the boolean gate. The current UI integration calls `LoadingPageDone` when a loading page's animation finishes. A close animation must also have `signalsSceneTransitionCloseAnimationDone` enabled so `UIPageHandler` sends the separate close flag. A transition can otherwise remain waiting indefinitely at either gate.
 
 ## Frame-time stabilization
 

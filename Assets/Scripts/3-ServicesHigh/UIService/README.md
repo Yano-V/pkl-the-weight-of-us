@@ -149,7 +149,7 @@ When a concrete animation finishes, it calls `SetAnimationDone()`. This publishe
 | `checkAnimatorGroupID` | If enabled, a dependency event must also have the same animator-group ID as this animation's initialized owner. |
 | `checkAnimatorID` | If enabled, a dependency event must also have the same animator ID as this animation's initialized owner. |
 | `checkAnimationGroupID` | If enabled, a dependency event must also have the same animation-group ID as this animation's initialized owner. |
-| `sendCloseAnimationDoneFlag` | Included in the completion data. For a close animation, `UIPageHandler` uses this flag to set `ISceneServiceManageable.SetCloseAnimationDoneFlag(true)`, allowing the scene-loading coroutine's close-animation wait to finish. It has no effect on open completions. |
+| `signalsSceneTransitionCloseAnimationDone` | Enable on a loading page's close animation to set `ISceneServiceManageable.SetCloseAnimationDoneFlag(true)` and release the scene-transition close-animation gate. This is separate from `LoadingPageDone(UIAnimType.Close)`; both signals are required. It has no effect on open completions. |
 | `excludeOpenAnimationFromCount` | The open animation still runs and can emit completion data, but `UIAnimationGroup` does not count its `OnAnimationDone` event toward open group completion. |
 | `excludeCloseAnimationFromCount` | Same exclusion behavior for close group completion. |
 
@@ -199,7 +199,7 @@ For a single-scene asynchronous load, `GameSceneService` performs this sequence:
 4. Waits for frame time to stabilize, emits `OnFrameTimeStabilized`, and the handler closes the loading page.
 5. Waits for the loading page's `UIAnimType.Close` completion, then emits `OnSceneCompleteLoad` and waits for the target scene default page to finish displaying before emitting `OnSceneCompleteLoadPageDone`.
 
-For the close wait to finish, a close animation must report `LoadingPageDone(UIAnimType.Close)`. In addition, the scene service's `closeAnimationDoneFlag` is set only when an animation completion has `sendCloseAnimationDoneFlag` enabled and is a close animation; configure that flag on the relevant animation asset. The settings option `DontSendLoadingPageDoneEvent` is effective only when both `debugMode` and `dontSendLoadingPageDoneEvent` are true, and suppresses the loading-page completion notifications/close-flag signal.
+For the close wait to finish, a close animation must report `LoadingPageDone(UIAnimType.Close)`. Separately, the scene service's `closeAnimationDoneFlag` is set only when a close animation completion has `signalsSceneTransitionCloseAnimationDone` enabled; configure this on the loading page's close animation asset. The settings option `DontSendLoadingPageDoneEvent` is effective only when both `debugMode` and `dontSendLoadingPageDoneEvent` are true, and suppresses the loading-page completion notifications/close-flag signal.
 
 `PrepareUIPageSO` is not called by `UIPageHandler` itself. The caller initiating a transition must prepare the loading-page asset before the scene service starts loading if that loading page should be shown.
 

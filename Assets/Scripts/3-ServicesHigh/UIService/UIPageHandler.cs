@@ -258,7 +258,7 @@ public class UIPageHandler
     {
         OnDonePlaying?.Invoke(animationData);
 
-        if (animationData.SendCloseAnimationDoneFlag &&
+        if (animationData.SignalsSceneTransitionCloseAnimationDone &&
             animationData.UIAnimType == UIAnimType.Close && 
             !uIServiceSettingsSO.DontSendLoadingPageDoneEvent)
         {
