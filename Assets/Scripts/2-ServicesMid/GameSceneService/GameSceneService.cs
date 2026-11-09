@@ -17,9 +17,7 @@ public class GameSceneService : MonoService, ISceneServiceManageable
     [SerializeField] SceneData loadingSceneData;
 
     #region Interface Implementation Events
-    public event Action<SceneData> OnScenePreLoading;
-    public event Action<SceneData> OnSceneLoading;
-    public event Action<SceneData> OnScenePostLoading;
+    public event Action<SceneLoadingEventData> OnSceneLoading;
     public event Action<SceneData> OnFrameTimeStabilized;
     public event Action<SceneData> OnSceneCompleteLoad;
     public event Action<SceneData> OnSceneCompleteLoadPageDone;
@@ -99,7 +97,8 @@ public class GameSceneService : MonoService, ISceneServiceManageable
 
             if (currentSceneData != null)
             {
-                OnScenePostLoading?.Invoke(currentSceneData);                
+                iGSM.ChangeMainGameState(currentSceneData.DefaultMainGameState);
+                OnSceneLoading?.Invoke(new(currentSceneData, LoadState.PostLoading));
                 OnSceneCompleteLoad?.Invoke(currentSceneData);
                 OnSceneCompleteLoadPageDone?.Invoke(currentSceneData);
                 serviceInitialized = true;
@@ -109,35 +108,24 @@ public class GameSceneService : MonoService, ISceneServiceManageable
     #endregion
 
     #region Interface Implementation Methods
-    public void LoadSceneAsync(SceneData sceneToLoad, LoadSceneMode loadSceneMode, bool isAsync = true)
+    public void LoadSceneAsync(SceneData sceneToLoad,
+                               LoadSceneMode loadSceneMode,
+                               bool isAsync = true,
+                               bool unloadPreviousScene = false)
     {
-        if (isAsync)
-        {
-            switch (loadSceneMode)
-            {
-                case LoadSceneMode.Single:
-                    LoadSceneSingleAsync(sceneToLoad);
-                    break;
-                case LoadSceneMode.Additive:
-                    break;
-                default:
-                    break;
-            }
-        }
-        else
+        if (!isAsync)
         {
             throw new NotImplementedException("Synchronous Loading is not implemented yet");
-
-            // switch (loadSceneMode)
-            // {
-            //     case LoadSceneMode.Single:
-            //         break;
-            //     case LoadSceneMode.Additive:
-            //         break;
-            //     default:
-            //         break;
-            // }
         }
+
+        if (loadSceneMode != LoadSceneMode.Single && loadSceneMode != LoadSceneMode.Additive)
+        {
+            LogUtilities.LogError($"Unsupported scene load mode: {loadSceneMode}.", GetType().Name);
+            return;
+        }
+
+        SceneServiceLoadData loadData = new(sceneToLoad, loadSceneMode, unloadPreviousScene);
+        StartSceneLoad(loadData);
     }
 
     public void LoadingPageDone(UIAnimType uIAnimType) => waitUntilLoadingPageDone.CurrentType = uIAnimType;
@@ -147,18 +135,14 @@ public class GameSceneService : MonoService, ISceneServiceManageable
     #endregion
 
     #region Private Methods
-    void LoadSceneSingleAsync(SceneData sceneData)
+    void StartSceneLoad(SceneServiceLoadData loadData)
     {
         if (loadCoroutine != null)
             StopCoroutine(loadCoroutine);
 
-        loadCoroutine = StartCoroutine(LoadSceneSingleAsyncCor(sceneData));
+        loadCoroutine = StartCoroutine(LoadSceneAsyncCoroutine(loadData));
     }
 
-    void LoadSceneAdditiveAsync(SceneData sceneData)
-    {
-        
-    }
     #endregion
 
     #region Private Update Methods
@@ -170,8 +154,10 @@ public class GameSceneService : MonoService, ISceneServiceManageable
     #endregion
 
     #region Coroutines
-    IEnumerator LoadSceneSingleAsyncCor(SceneData sceneData)
+    IEnumerator LoadSceneAsyncCoroutine(SceneServiceLoadData loadData)
     {
+        SceneData sceneData = loadData.SceneData;
+
         if (sceneData.IsSceneLoaded)
         {
             LogUtilities.LogWarning($"Cannot load {sceneData.SceneName}. Scene is already loaded.", GetType().Name);
@@ -186,7 +172,7 @@ public class GameSceneService : MonoService, ISceneServiceManageable
 
         loadingSceneData = sceneData;
         iGSM.ChangeLoadState(LoadState.PreLoading);
-        OnScenePreLoading?.Invoke(loadingSceneData);
+        OnSceneLoading?.Invoke(new(loadingSceneData, LoadState.PreLoading));
         waitUntilLoadingPageDone.PrepareConditions(UIAnimType.Open);
         
         while (!allPagesClosed)
@@ -197,23 +183,60 @@ public class GameSceneService : MonoService, ISceneServiceManageable
             
         yield return waitUntilLoadingPageDone;
 
-        AsyncOperation sceneToLoad = SceneManager.LoadSceneAsync(sceneData.SceneName);
+        AsyncOperation sceneToLoad = loadData.LoadSceneMode switch
+        {
+            LoadSceneMode.Single => SceneManager.LoadSceneAsync(sceneData.SceneName),
+            LoadSceneMode.Additive => SceneManager.LoadSceneAsync(sceneData.SceneName, LoadSceneMode.Additive),
+            _ => null
+        };
+
+        if (sceneToLoad == null)
+        {
+            LogUtilities.LogError($"Unable to start loading scene {sceneData.SceneName}.", GetType().Name);
+            loadCoroutine = null;
+            yield break;
+        }
+
         iGSM.ChangeLoadState(LoadState.Loading);
-        OnSceneLoading?.Invoke(loadingSceneData);
+        OnSceneLoading?.Invoke(new(loadingSceneData, LoadState.Loading));
         
         sceneToLoad.allowSceneActivation = false;
 
+        bool startLoadingLogged = false;
         while (sceneToLoad.progress < 0.9f)
         {
+            if (!startLoadingLogged)
+            {
+                LogUtilities.Log($"Now Loading Scene: {loadingSceneData.SceneName}", GetType().Name);
+                startLoadingLogged = true;
+            }
+
             OnUpdateLoadProgress?.Invoke(sceneToLoad.progress);
             yield return null;
         }
 
+        if (currentSceneData != null)
+            previousSceneData = currentSceneData;
+
         sceneToLoad.allowSceneActivation = true;
 
         while (!sceneToLoad.isDone) yield return null;
+
+        if (loadData.UnloadPreviousScene &&
+            loadData.LoadSceneMode == LoadSceneMode.Additive &&
+            previousSceneData != null &&
+            SceneManager.GetSceneByName(previousSceneData.SceneName).isLoaded)
+        {
+            AsyncOperation sceneToUnload = SceneManager.UnloadSceneAsync(previousSceneData.SceneName);
+            if (sceneToUnload != null)
+            {
+                LogUtilities.Log($"Unloading Scene: {previousSceneData.SceneName}", GetType().Name);
+                while (!sceneToUnload.isDone) yield return null;
+            }
+        }
+
         iGSM.ChangeLoadState(LoadState.PostLoading);
-        OnScenePostLoading?.Invoke(loadingSceneData);
+        OnSceneLoading?.Invoke(new(loadingSceneData, LoadState.PostLoading));
         waitUntilFrameTimeStabilize.ResetTimeoutTimer();
 
         yield return waitUntilFrameTimeStabilize;
@@ -222,11 +245,10 @@ public class GameSceneService : MonoService, ISceneServiceManageable
         OnFrameTimeStabilized?.Invoke(loadingSceneData);
 
         while (!closeAnimationDoneFlag) yield return null;
-        if (currentSceneData != null)
-            previousSceneData = currentSceneData;
         currentSceneData = loadingSceneData;
         loadingSceneData = null;
 
+        iGSM.ChangeMainGameState(currentSceneData.DefaultMainGameState);
         iGSM.ChangeLoadState(LoadState.Done);
         OnSceneCompleteLoad?.Invoke(currentSceneData);
         

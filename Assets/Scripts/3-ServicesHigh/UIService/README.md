@@ -6,7 +6,7 @@
 
 | Type | Responsibility |
 | --- | --- |
-| [`UIService`](UIService.cs) | Registers the `IUIService`, creates the page handler, and instantiates configured loading-page prefabs. |
+| [`UIService`](UIService.cs) | Registers the `IUIService`, owns the UGUI `EventSystem`, creates the page handler, instantiates configured loading-page prefabs, and removes scene-local EventSystems after scene activation. |
 | [`IUIService`](../../0-Core/Services/MonoServices/UIService/IUIService.cs) | Service contract exposing settings, the page handler, and loading canvas. |
 | [`UIPageHandler`](UIPageHandler.cs) | Page/loading registries, opened-page stack, page navigation, scene-event integration, and animation completion events. |
 | [`UIPage`](UIPage.cs) | Component on each page root; registers itself and controls its content, selectables, and optional page animations. |
@@ -27,7 +27,7 @@ Related scene-transition contracts are [`ISceneServiceManageable`](../../0-Core/
 
 ## Setup
 
-1. Add `UIService` to the scene/service bootstrap and assign its `UIServiceSettingsSO` and loading `Canvas` references. The `ISceneServiceManageable` must already be registered when `UIService.Awake` runs. Only the first registered `IUIService` is kept; a duplicate service GameObject destroys itself.
+1. Add `UIService` to the scene/service bootstrap and assign its `UIServiceSettingsSO`, loading `Canvas`, and persistent UGUI `EventSystem` references. Scene-local EventSystems are destroyed after scene activation, so the assigned EventSystem must belong to the persistent UIService. The `ISceneServiceManageable` must already be registered when `UIService.Awake` runs. Only the first registered `IUIService` is kept; a duplicate service GameObject destroys itself.
 2. Create a `UIServiceSettingsSO` asset (`Limbo > UI > UI Service Settings`). Add loading-page prefabs to **Loading Page Prefabs**. They are instantiated by the service during `Awake`; null entries are ignored.
 3. Create a `UIPageSO` for each page (`Limbo > UI > UI Page`). Its computed `PageID` is the runtime registry key and must be unique among live page instances. Set its `UIPageType` and `OpenPageType`.
 4. Add `UIPage` to each page root and assign its `UIPageSO` and content GameObject. The content reference is used directly by `SetActive`, so it must be assigned. For loading pages, the service also requires the loading Canvas and reparents the registered page root under that canvas.
@@ -95,7 +95,7 @@ The navigation type is read from the page being opened/closed. Opening a page di
 
 ## Runtime page lifecycle
 
-When `UIService.Awake` runs, it registers itself, resolves `ISceneServiceManageable`, constructs `UIPageHandler`, subscribes the handler to scene-service events, and instantiates loading prefabs. When a `UIPage.Awake` runs, it resolves both services and registers its instance with the handler.
+When `UIService.Awake` runs, it registers itself, resolves `ISceneServiceManageable`, constructs `UIPageHandler`, subscribes to `OnSceneLoading` and removes EventSystems only for the `PostLoading` phase, then instantiates loading prefabs. The EventSystem assigned to the persistent service is retained. When a `UIPage.Awake` runs, it resolves both services and registers its instance with the handler.
 
 On registration, the handler adds a page to `RegisteredPages`, marks it registered, briefly enables then disables its content, and logs the registration. A duplicate `PageID` destroys the duplicate page GameObject. Loading pages are additionally stored in `LoadingPages` and parented to the loading canvas. `OnDestroy` unregisters a page; destroying the service unsubscribes the handler from scene events.
 
@@ -193,7 +193,7 @@ The open/close exclusion flags omit an animation from that direction's completio
 
 For a single-scene asynchronous load, `GameSceneService` performs this sequence:
 
-1. Emits `OnScenePreLoading`; the UI handler disables interaction on opened pages and hides them.
+1. Emits `OnSceneLoading` with `LoadState.PreLoading`; the UI handler filters for that phase, disables interaction on opened pages, and hides them.
 2. Waits for `SetAllPagesClosed()`. Closing page animations call `UIPageHandler.PingAnimationDone()`, which checks `IsOpen` for the stack and signals the scene service once every non-null page is closed. If a prepared loading page exists, the handler opens it after this close check.
 3. Waits for the loading page's `UIAnimType.Open` completion via `LoadingPageDone`, then loads and activates the target scene.
 4. Waits for frame time to stabilize, emits `OnFrameTimeStabilized`, and the handler closes the loading page.
@@ -218,4 +218,4 @@ Several components expose editor-only `AutoSetReferenceSettings` helpers for ass
 
 ## Related scene-service API
 
-`ISceneServiceManageable` provides `LoadSceneAsync`, `LoadingPageDone`, `SetAllPagesClosed`, and `SetCloseAnimationDoneFlag`. The UI handler subscribes to `OnScenePreLoading`, `OnFrameTimeStabilized`, `OnSceneCompleteLoad`, and `OnSceneCompleteLoadPageDone`, and unsubscribes when destroyed. The scene service also declares loading-page and progress events, but the UI handler does not subscribe to those events directly.
+`ISceneServiceManageable` provides `LoadSceneAsync`, `LoadingPageDone`, `SetAllPagesClosed`, and `SetCloseAnimationDoneFlag`. The UI handler subscribes to `OnSceneLoading` and filters for `LoadState.PreLoading`, as well as `OnFrameTimeStabilized`, `OnSceneCompleteLoad`, and `OnSceneCompleteLoadPageDone`; it unsubscribes when destroyed. The scene service also declares loading-page and progress events, but the UI handler does not subscribe to those events directly.

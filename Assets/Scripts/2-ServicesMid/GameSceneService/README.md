@@ -23,7 +23,7 @@
 1. Add `GameSceneService` to the persistent service/bootstrap scene. It registers both `ISceneService` and `ISceneServiceManageable` if no `ISceneService` is already registered.
 2. Assign a `SceneServiceSettingsSO` asset. Its `Frame Time Stable Check Timeout` controls how long post-load frame stabilization waits before continuing.
 3. Configure `GameDataService` with the Addressables label for scene metadata. Each scene that should be resolved needs a `SceneData` asset under that label.
-4. In each `SceneData`, set `Scene Name` to exactly the Unity scene name, and assign its scene default page if the UI flow requires one. The asset also holds a `Default Main Game State`; this service exposes the scene metadata but does not itself apply that state.
+4. In each `SceneData`, set `Scene Name` to exactly the Unity scene name, and assign its scene default page if the UI flow requires one. The service applies its `Default Main Game State` during bootstrap and after a scene transition.
 5. Ensure `GameDataService` and `GameSceneService` can resolve their service dependencies from `GameServices` during `Awake`. `GameSceneService` requires `IDataService` and `IGameServiceManageable`; the frame-time wait also requires the game service's performance tracker and load state.
 6. For transitions with UI, ensure `UIService` is registered and scene pages are configured. A caller should prepare the loading-page asset through `UIPageHandler.PrepareUIPageSO(...)` before requesting a load if a loading page is to be shown. The loading page reports completion through `UIPage.UIAnimatorFinished`.
 
@@ -35,7 +35,7 @@
 
 | Field | Runtime role |
 | --- | --- |
-| `previousSceneData` | Serialized current/previous-scene slot; it is not read or written elsewhere in this implementation. |
+| `previousSceneData` | Metadata for the outgoing scene; updated before activation and used when an additive load requests unloading the previous scene. |
 | `currentSceneData` | Scene metadata currently considered loaded. Updated after the transition waits complete, or during initial scene discovery. |
 | `loadingSceneData` | Target metadata while the single-scene coroutine is in progress. Cleared after close-animation gating and before final completion events. |
 
@@ -55,7 +55,7 @@ The other important internal state is:
 
 | Method | Behavior |
 | --- | --- |
-| `LoadSceneAsync(SceneData sceneToLoad, LoadSceneMode loadSceneMode, bool isAsync = true)` | Starts the asynchronous single-scene coroutine for `LoadSceneMode.Single`. Additive mode currently does nothing. `isAsync: false` throws `NotImplementedException`. |
+| `LoadSceneAsync(SceneData sceneToLoad, LoadSceneMode loadSceneMode, bool isAsync = true, bool unloadPreviousScene = false)` | Starts asynchronous single or additive loading. For additive mode, `unloadPreviousScene: true` unloads the tracked outgoing scene after the new scene activates. Single mode already replaces the current scene. `isAsync: false` throws `NotImplementedException`. |
 | `LoadingPageDone(UIAnimType type)` | Updates the loading-page waiter's current value. The coroutine waits for `Open` before loading and `Close` after frame stabilization. |
 | `SetAllPagesClosed()` | Releases the wait for all current pages to close during preloading. |
 | `SetCloseAnimationDoneFlag(bool value)` | Changes the close-animation gate used after `OnFrameTimeStabilized`. UI animation completion currently sets it to true when configured to do so. |
@@ -64,32 +64,31 @@ The other important internal state is:
 
 ## Lifecycle events
 
-All scene lifecycle events carry the relevant `SceneData` instance. `OnUpdateLoadProgress` carries Unity's asynchronous operation progress value.
+`OnSceneLoading` carries a `SceneLoadingEventData` containing both the relevant `SceneData` and the current `LoadState`. It is emitted at `PreLoading`, `Loading`, and `PostLoading`; initial scene bootstrap emits it once with `PostLoading`. Other lifecycle events carry the relevant `SceneData` instance. `OnUpdateLoadProgress` carries Unity's asynchronous operation progress value.
 
-| Event | When it is emitted by the normal single-scene flow |
+| Event | When it is emitted by the normal asynchronous scene flow |
 | --- | --- |
-| `OnScenePreLoading` | Before waiting for UI pages to close. Sets game load state to `PreLoading`. |
-| `OnSceneLoading` | After requesting Unity's asynchronous load and setting load state to `Loading`. |
+| `OnSceneLoading` | Before waiting for UI pages to close (`PreLoading`), after requesting Unity's asynchronous load (`Loading`), and after activation (`PostLoading`); each invocation includes the phase in `SceneLoadingEventData.LoadState`. |
 | `OnUpdateLoadProgress` | While `AsyncOperation.progress < 0.9`; passes the progress value. It is not emitted after the threshold or after activation. |
-| `OnScenePostLoading` | After Unity reports the operation done and load state changes to `PostLoading`. |
 | `OnFrameTimeStabilized` | After the frame-time wait (including its timeout fallback) completes. The UI handler closes the loading page in response. |
 | `OnSceneCompleteLoad` | After the close-animation flag is set and the target is made `currentSceneData`; game load state changes to `Done` first. |
 | `OnSceneCompleteLoadPageDone` | After the coroutine receives the loading waiter's close completion following `OnSceneCompleteLoad`. The UI handler displays the target scene's default page when it receives this event. |
 | `OnOpenLoadingPage`, `OnCloseLoadingPage` | Declared in the interface and service, but not invoked by `GameSceneService` in the current implementation. |
 
-`UIPageHandler` subscribes to `OnScenePreLoading`, `OnFrameTimeStabilized`, `OnSceneCompleteLoad`, and `OnSceneCompleteLoadPageDone`. It hides/interacts with pages during preloading, closes the loading page when frame time is stabilized, installs the scene default page in its stack at scene completion, and displays that page on `OnSceneCompleteLoadPageDone`.
+`UIPageHandler` subscribes to `OnSceneLoading`, `OnFrameTimeStabilized`, `OnSceneCompleteLoad`, and `OnSceneCompleteLoadPageDone`. It filters `OnSceneLoading` for `PreLoading` before hiding/interacting with pages, closes the loading page when frame time is stabilized, installs the scene default page in its stack at scene completion, and displays that page on `OnSceneCompleteLoadPageDone`.
 
-## Single-scene asynchronous flow
+## Asynchronous scene flow
 
-`LoadSceneSingleAsync` stops any previous scene-load coroutine and starts `LoadSceneSingleAsyncCor`:
+`StartSceneLoad` stops any previous scene-load coroutine and starts `LoadSceneAsyncCoroutine`:
 
 1. **Validate target:** If `SceneData.IsSceneLoaded` is true, log a warning and exit.
-2. **Prepare preloading:** Reset both boolean gates, initialize the frame-time waiter from the current average frame time, assign `loadingSceneData`, change game load state to `PreLoading`, emit `OnScenePreLoading`, and set the loading-page waiter to expect `Open`.
+2. **Prepare preloading:** Reset both boolean gates, initialize the frame-time waiter from the current average frame time, assign `loadingSceneData`, change game load state to `PreLoading`, emit `OnSceneLoading` with `LoadState.PreLoading`, and set the loading-page waiter to expect `Open`.
 3. **Close current UI:** Wait frame-by-frame until a consumer calls `SetAllPagesClosed()`. Then wait until `LoadingPageDone(Open)` has been reported. The UI page handler uses page close completion to set the all-pages-closed gate and can open a page previously passed to `PrepareUIPageSO`.
-4. **Load without immediate activation:** Call `SceneManager.LoadSceneAsync`, change state to `Loading`, emit `OnSceneLoading`, and set `allowSceneActivation = false`. While progress is below `0.9`, emit `OnUpdateLoadProgress` each loop. At `0.9`, allow activation and wait for `isDone`.
-5. **Post-load stabilization:** Change state to `PostLoading`, emit `OnScenePostLoading`, reset the stabilization timeout, and yield until frame time is stable for ten consecutive samples or the configured timeout expires. Frame samples and timeout are updated in `Update`; timeout time accumulates only while load state is `PostLoading`.
-6. **Close loading UI:** Set the loading-page waiter to expect `Close`, emit `OnFrameTimeStabilized`, then wait for `closeAnimationDoneFlag` to become true.
-7. **Complete scene:** Promote `loadingSceneData` to `currentSceneData`, clear the loading reference, change game load state to `Done`, emit `OnSceneCompleteLoad`, and wait for `LoadingPageDone(Close)`. Finally emit `OnSceneCompleteLoadPageDone` and clear `loadCoroutine`.
+4. **Load without immediate activation:** Call `SceneManager.LoadSceneAsync` using the requested `LoadSceneMode`, change state to `Loading`, emit `OnSceneLoading` with `LoadState.Loading`, and set `allowSceneActivation = false`. While progress is below `0.9`, emit `OnUpdateLoadProgress` each loop. At `0.9`, track the outgoing scene, allow activation, and wait for `isDone`.
+5. **Optional outgoing-scene unload:** When additive loading was requested with `unloadPreviousScene: true`, unload the tracked outgoing scene and wait for its unload operation to finish. Single-mode loads replace the prior scene as part of Unity's load operation.
+6. **Post-load stabilization:** Change state to `PostLoading`, emit `OnSceneLoading` with `LoadState.PostLoading`, reset the stabilization timeout, and yield until frame time is stable for ten consecutive samples or the configured timeout expires. Frame samples and timeout are updated in `Update`; timeout time accumulates only while load state is `PostLoading`.
+7. **Close loading UI:** Set the loading-page waiter to expect `Close`, emit `OnFrameTimeStabilized`, then wait for `closeAnimationDoneFlag` to become true.
+8. **Complete scene:** Promote `loadingSceneData` to `currentSceneData`, clear the loading reference, apply its default main-game state, change game load state to `Done`, emit `OnSceneCompleteLoad`, and wait for `LoadingPageDone(Close)`. Finally emit `OnSceneCompleteLoadPageDone` and clear `loadCoroutine`.
 
 The two UI completion signals are separate: `LoadingPageDone` satisfies the direction-specific yield instruction, while `SetCloseAnimationDoneFlag(true)` satisfies the boolean gate. The current UI integration calls `LoadingPageDone` when a loading page's animation finishes. A close animation must also have `signalsSceneTransitionCloseAnimationDone` enabled so `UIPageHandler` sends the separate close flag. A transition can otherwise remain waiting indefinitely at either gate.
 
@@ -101,7 +100,7 @@ The timeout is a fallback: the wait ends when either ten consecutive stable samp
 
 ## Initial scene bootstrap
 
-On `Awake`, the service subscribes to `SceneManager.sceneLoaded`. The first scene-loaded callback received before `serviceInitialized` resolves a `SceneData` by the loaded Unity scene name. If metadata is found, it assigns `currentSceneData`, emits `OnScenePostLoading`, `OnSceneCompleteLoad`, and `OnSceneCompleteLoadPageDone` immediately, then marks the service initialized. This bootstrap path does not run the normal load coroutine, does not emit preloading/loading events, and does not wait for UI or frame-time stabilization.
+On `Awake`, the service subscribes to `SceneManager.sceneLoaded`. The first scene-loaded callback received before `serviceInitialized` resolves a `SceneData` by the loaded Unity scene name. If metadata is found, it assigns `currentSceneData`, emits `OnSceneLoading` with `LoadState.PostLoading`, then emits `OnSceneCompleteLoad` and `OnSceneCompleteLoadPageDone` immediately before marking the service initialized. This bootstrap path does not run the normal load coroutine, does not emit the `PreLoading` or `Loading` phases, and does not wait for UI or frame-time stabilization.
 
 If metadata is missing, `GameDataService` logs an error and returns null; the service does not set `serviceInitialized` in that case. Since the handler only processes the first scene-loaded callback while uninitialized, metadata for the boot scene should be available at startup.
 
@@ -115,21 +114,17 @@ If metadata is missing, `GameDataService` logs an error and returns null; the se
 
 The following features are incomplete or declared without runtime behavior in the current scripts:
 
-- **Additive scene loading:** `LoadSceneMode.Additive` has an empty switch branch, and the private `LoadSceneAdditiveAsync` method has no implementation. Additive loads currently do nothing.
 - **Synchronous scene loading:** `LoadSceneAsync(..., isAsync: false)` always throws `NotImplementedException`; the commented-out switch is only a placeholder.
 - **Loading-page open/close events:** `OnOpenLoadingPage` and `OnCloseLoadingPage` are part of `ISceneService` and are declared by `GameSceneService`, but the service never invokes them. The current UI flow is connected through scene lifecycle events and direct calls to `UIPageHandler`.
-- **Previous-scene tracking:** `previousSceneData` is serialized but is not assigned or read. The service does not currently preserve the outgoing scene metadata in this field.
-- **Applying the scene's default game state:** `SceneData` exposes `DefaultMainGameState`, but `GameSceneService` does not apply it to the game-state service during bootstrap or transitions.
 
 ## Current implementation limitations and caveats
 
-- Only asynchronous `LoadSceneMode.Single` is implemented. Additive mode is a no-op, and synchronous loading throws `NotImplementedException`.
+- Asynchronous single and additive scene loading are supported. Additive loads preserve the outgoing scene unless `unloadPreviousScene` is requested; synchronous loading throws `NotImplementedException`.
 - Calling a new single-scene load stops the previous coroutine without explicitly resetting its state or notifying event subscribers that it was cancelled. The new coroutine resets its two boolean gates and re-prepares wait conditions.
 - Preloading waits have no timeout: missing calls to `SetAllPagesClosed()` or `LoadingPageDone(Open)` stall the transition.
 - The post-stabilization close phase has two independent waits: the close-animation flag and the loading waiter's `Close` value. Both must be reported.
 - Scene activation is held at Unity's `0.9` progress threshold until the loading-page open wait completes; the progress event only covers values below `0.9`.
 - The initial bootstrap event path is not equivalent to a regular coroutine load and may notify subscribers before scene pages or other listeners have registered, depending on Unity service initialization order.
-- `previousSceneData` is currently unused. `SceneData.DefaultMainGameState` is also not applied by `GameSceneService` itself.
 - `OnOpenLoadingPage` and `OnCloseLoadingPage` are presently declarations only; use the UI handler's API and scene lifecycle events for current behavior.
 - `SceneServiceSettingsSO` and service references are assumed to be assigned/available; null configuration is not guarded throughout the loading flow.
 

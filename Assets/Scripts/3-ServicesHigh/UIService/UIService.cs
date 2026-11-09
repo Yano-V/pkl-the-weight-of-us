@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class UIService : MonoService, IUIService
 {
@@ -9,6 +10,7 @@ public class UIService : MonoService, IUIService
     [SerializeField] UIPageHandler uIPageHandler;
  
     [SerializeField] Canvas loadingUICanvas;
+    [SerializeField] EventSystem eventSystem;
 
     #region Interface Implementation Properties
     public Canvas LoadingUICanvas => loadingUICanvas;
@@ -33,6 +35,7 @@ public class UIService : MonoService, IUIService
         iSSM = GameServices.Get<ISceneServiceManageable>();
 
         uIPageHandler = new(this, iSSM);
+        iSSM.OnSceneLoading += HandleOnSceneLoading;
 
         InstantiateLoadingPages();
     }
@@ -41,6 +44,7 @@ public class UIService : MonoService, IUIService
     {
         if (serviceRegistered)
         {
+            iSSM.OnSceneLoading -= HandleOnSceneLoading;
             GameServices.Unregister<IUIService>();
             serviceRegistered = false;
 
@@ -48,6 +52,20 @@ public class UIService : MonoService, IUIService
         }
     }
     #endregion
+
+    private void HandleOnSceneLoading(SceneLoadingEventData data)
+    {
+        if (data.LoadState != LoadState.PostLoading) return;
+
+        EventSystem[] eventSystems = FindObjectsByType<EventSystem>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        foreach (EventSystem sceneEventSystem in eventSystems)
+        {
+            if (sceneEventSystem == eventSystem) continue;
+
+            Destroy(sceneEventSystem.gameObject);
+        }
+    }
 
     void InstantiateLoadingPages()
     {

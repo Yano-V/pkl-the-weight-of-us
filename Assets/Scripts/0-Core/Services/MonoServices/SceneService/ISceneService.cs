@@ -5,9 +5,7 @@ public interface ISceneService : IBaseService
 {
     SceneServiceSettingsSO SceneServiceSettingsSO { get; }
 
-    event Action<SceneData> OnScenePreLoading;
-    event Action<SceneData> OnSceneLoading;
-    event Action<SceneData> OnScenePostLoading;
+    event Action<SceneLoadingEventData> OnSceneLoading;
     event Action<SceneData> OnFrameTimeStabilized;
     event Action<SceneData> OnSceneCompleteLoad;
     event Action<SceneData> OnSceneCompleteLoadPageDone;
@@ -24,5 +22,8 @@ public interface ISceneServiceManageable : ISceneService
     void SetAllPagesClosed();
     void SetCloseAnimationDoneFlag(bool value);
 
-    void LoadSceneAsync(SceneData sceneToLoad, LoadSceneMode loadSceneMode, bool isAsync = true);
+    void LoadSceneAsync(SceneData sceneToLoad,
+                        LoadSceneMode loadSceneMode,
+                        bool isAsync = true,
+                        bool unloadPreviousScene = false);
 }

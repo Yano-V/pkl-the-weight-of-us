@@ -40,7 +40,7 @@ public class UIPageHandler
 
         uIServiceSettingsSO = iUIS.UIServiceSettingsSO;
 
-        this.iSSM.OnScenePreLoading += HandleScenePreLoading;
+        this.iSSM.OnSceneLoading += HandleSceneLoading;
         this.iSSM.OnFrameTimeStabilized += HandleFrameTimeStabilized;
         this.iSSM.OnSceneCompleteLoad += HandleSceneCompleteLoad;
         this.iSSM.OnSceneCompleteLoadPageDone += HandleSceneCompleteLoadPageDone;
@@ -48,15 +48,17 @@ public class UIPageHandler
 
     public void DestroyClass()
     {
-        iSSM.OnScenePreLoading -= HandleScenePreLoading;
+        iSSM.OnSceneLoading -= HandleSceneLoading;
         iSSM.OnFrameTimeStabilized -= HandleFrameTimeStabilized;
         iSSM.OnSceneCompleteLoad -= HandleSceneCompleteLoad;
         iSSM.OnSceneCompleteLoadPageDone -= HandleSceneCompleteLoadPageDone;
     }
 
     #region Event Callbacks
-    void HandleScenePreLoading(SceneData data)
+    void HandleSceneLoading(SceneLoadingEventData data)
     {
+        if (data.LoadState != LoadState.PreLoading) return;
+
         for (int i = openedPage.Count - 1; i >= 0; i--)
         {
             if (openedPage[i] == null) continue;
