@@ -13,6 +13,10 @@ MonoBehaviour:
   m_Name: BootstrapData
   m_EditorClassIdentifier: Assembly-CSharp::BootstrapData
   MonoBehaviourServicesPrefabs:
+  - {fileID: 5360111986463740609, guid: 49c45b07e038f5d4e915aa5bea112def, type: 3}
+  - {fileID: 5360111986463740609, guid: befc8e2074c7ed940941186656ba6fd6, type: 3}
+  - {fileID: 2263989038156569603, guid: 95c5a9f7bfe6cba4a963bd9c335ff6f2, type: 3}
   - {fileID: 5360111986463740609, guid: ca74b954329242542acce0bfd87aeea3, type: 3}
+  - {fileID: 5360111986463740609, guid: ecc949c29fe072146861744bf2ef7850, type: 3}
   - {fileID: 5360111986463740609, guid: 8f441300d8d205343918bf78e2642e35, type: 3}
   PlaceManagersHere: {fileID: 0}

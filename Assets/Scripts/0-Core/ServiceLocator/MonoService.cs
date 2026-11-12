@@ -4,4 +4,5 @@ using UnityEngine;
 public abstract class MonoService : MonoBehaviour
 {
     protected bool serviceRegistered;
+    protected bool serviceInitialized;
 }

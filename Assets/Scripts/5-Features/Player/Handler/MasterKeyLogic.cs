@@ -73,7 +73,7 @@ public class MasterKeyLogic : MonoBehaviour
 
     private Transform FindDoor(Transform current)
     {
-        while (current != null)
+        while (current != null) // PsychoLucidia: Take caution of using while as Unity could freeze while in the while loop
         {
             if (current.GetComponent<DoorInteractable>() != null
                 || current.name.ToLowerInvariant().Contains(DoorName))
