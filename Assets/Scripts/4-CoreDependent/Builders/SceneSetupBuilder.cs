@@ -1,8 +1,24 @@
 using System;
 using UnityEngine.SceneManagement;
 
+// ================================================================================= //
+//                                                                                   //
+// Class Name: Scene Setup Builder                                                   //
+// Description: The central builder for all scene and room transitions in the game.  //
+//              It enforces a single, validated flow for preparing scene context,    //
+//              selecting the appropriate loading UI, configuring how the load       //
+//              should behave, and delegating the actual async scene request to the  //
+//              scene service. This keeps scene setup consistent across the codebase //
+//              and prevents invalid or partially configured transitions from being  //
+//              sent to the scene system.                                            //
+// Author: PsychoLucidia                                                             //
+//                                                                                   //
+// ================================================================================= //
+
 public class SceneSetupBuilder
 {
+    #region Fields
+
     private readonly ISceneServiceManageable iSSM;
     private readonly IUIService iUIS;
 
@@ -10,6 +26,10 @@ public class SceneSetupBuilder
     private UIPageSO loadingPage;
     private LoadSceneMode loadSceneMode = LoadSceneMode.Additive;
     private bool unloadPreviousScene;
+
+    #endregion
+
+    #region Constructors
 
     public SceneSetupBuilder()
     {
@@ -22,6 +42,10 @@ public class SceneSetupBuilder
         this.iSSM = iSSM;
         this.iUIS = iUIS;
     }
+
+    #endregion
+
+    #region Builder Configuration
 
     public SceneSetupBuilder SetSceneData(SceneData sceneData)
     {
@@ -50,6 +74,28 @@ public class SceneSetupBuilder
         return this;
     }
 
+    #endregion
+
+    #region Builder Lifecycle
+
+    /// <summary>
+    /// Clears the current builder state so the same instance can be reused safely.
+    /// </summary>
+    /// <remarks>
+    /// Only use this method if the builder instance is intentionally cached and reused.
+    /// </remarks>
+    public void ResetBuilder()
+    {
+        sceneData = null;
+        loadingPage = null;
+        loadSceneMode = LoadSceneMode.Additive;
+        unloadPreviousScene = false;
+    }
+
+    #endregion
+
+    #region Public Methods
+
     public void InitiateSceneLoad()
     {
         if (sceneData == null || loadingPage == null)
@@ -63,4 +109,6 @@ public class SceneSetupBuilder
         iUIS.UIPageHandler.PrepareUIPageSO(loadingPage);
         iSSM.LoadSceneAsync(sceneData, loadSceneMode, true, unloadPreviousScene);
     }
+
+    #endregion
 }

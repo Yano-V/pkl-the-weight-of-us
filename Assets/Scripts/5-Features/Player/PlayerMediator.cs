@@ -16,7 +16,7 @@ using UnityEngine.InputSystem;
 
 public class PlayerMediator : MonoBehaviour
 {
-    const string DoorName = "m_single-flush 0762 x 2032mm";
+    const string DoorName = "m_single-flush 0762 x 2032mm"; // PsychoLucidia: Kindly separate the Master Key Logic to its own class
 
     private IInputService iIS;
 
@@ -99,6 +99,7 @@ public class PlayerMediator : MonoBehaviour
 
     Transform FindDoor(Transform current)
     {
+        // PsychoLucidia - Be extra careful: while loops can block the Unity main thread if they run too long.
         while (current != null)
         {
             if (current.GetComponent<DoorInteractable>() != null
